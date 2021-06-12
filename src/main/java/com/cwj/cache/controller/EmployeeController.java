@@ -25,4 +25,15 @@ public class EmployeeController {
         Employee emp = employeeService.updateEmp(employee);
         return emp;
     }
+
+    @GetMapping("/del/emp/{id}")
+    public String deleteEmp(@PathVariable Integer id) {
+        employeeService.deleteEmp(id);
+        return "success";
+    }
+
+    @GetMapping("/emp/lastname/{lastName}")
+    public Employee getEmpByLastName(@PathVariable String lastName) {
+        return employeeService.getEmpByLastName(lastName);
+    }
 }

@@ -3,8 +3,10 @@ package com.cwj.cache.service;
 import com.cwj.cache.bean.Employee;
 import com.cwj.cache.mapper.EmployeeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,8 +45,6 @@ public class EmployeeService {
      * @Cacheable标注的方法执行之前先检查缓存中有没有这个数据，默认按照参数的值作为key去查询缓存
      * 如果没有就将方法返回结果放入缓存
      *
-     * @param id
-     * @return
      */
     @Cacheable(cacheNames = {"emp"}, unless = "#result==null") //condition="#id>1"
     public Employee getEmployee(Integer id){
@@ -72,4 +72,37 @@ public class EmployeeService {
         return employee;
     }
 
+    /**
+     * @CacheEvict ：缓存清除
+     *  key：指定要清除的数据
+     *  allEntries = true 可以将emp中的所有缓存删除，此时不写key，
+     *  (value = "emp", allEntries = true)
+     *  beforeInvocation = false 缓存的清除是否在方法执行之前，默认在方法执行之后
+     *  方法执行之前：方法出现异常也能清空缓存
+     *  方法执行之后：方法出现异常不清空缓存
+     */
+    @CacheEvict(value = "emp", key = "#id")
+    public void deleteEmp(Integer id) {
+        System.out.println("删除员工执行");
+        //employeeMapper.deleteEmpById(id);
+    }
+
+    /**
+     * 指定多个缓存规则
+     *  第一次通过lastName查询后，会把返回的数据通过lastName、id、email存在缓存，
+     *  之后再通过id和email查询时就不会发起数据库请求，
+     *  但通过lastName查询时仍然会查询数据库，因为标注了CachePut注解，方法总是会执行
+     */
+    @Caching(
+            cacheable = {
+                    @Cacheable(value = "emp", key = "#lastName")
+            },
+            put = {
+                    @CachePut(value = "emp", key = "#result.id"),
+                    @CachePut(value = "emp", key = "#result.email")
+            }
+    )
+    public Employee getEmpByLastName(String lastName) {
+        return employeeMapper.getEmpByLastName(lastName);
+    }
 }
