@@ -3,12 +3,10 @@ package com.cwj.cache.service;
 import com.cwj.cache.bean.Employee;
 import com.cwj.cache.mapper.EmployeeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
+import org.springframework.cache.annotation.*;
 import org.springframework.stereotype.Service;
 
+@CacheConfig(cacheNames = "emp")    //使用这个注解后，下方的所有缓存注解都不用写 value = "emp" 了
 @Service
 public class EmployeeService {
 
@@ -46,7 +44,7 @@ public class EmployeeService {
      * 如果没有就将方法返回结果放入缓存
      *
      */
-    @Cacheable(cacheNames = {"emp"}, unless = "#result==null") //condition="#id>1"
+    @Cacheable(/*cacheNames = {"emp"}, */unless = "#result==null") //condition="#id>1"
     public Employee getEmployee(Integer id){
         System.out.println("查询开始");
         Employee employee = employeeMapper.getEmpById(id);
@@ -66,7 +64,7 @@ public class EmployeeService {
      *      2 key = #result.id （#result是方法的返回值）
      * @Cacheable 的key是不能用#result取的，因为在方法运行之前就需要key
      */
-    @CachePut(value = "emp", key = "#result.id")
+    @CachePut(/*value = "emp", */key = "#result.id")
     public Employee updateEmp(Employee employee) {
         employeeMapper.updateEmp(employee);
         return employee;
@@ -81,7 +79,7 @@ public class EmployeeService {
      *  方法执行之前：方法出现异常也能清空缓存
      *  方法执行之后：方法出现异常不清空缓存
      */
-    @CacheEvict(value = "emp", key = "#id")
+    @CacheEvict(/*value = "emp", */key = "#id")
     public void deleteEmp(Integer id) {
         System.out.println("删除员工执行");
         //employeeMapper.deleteEmpById(id);
@@ -95,11 +93,11 @@ public class EmployeeService {
      */
     @Caching(
             cacheable = {
-                    @Cacheable(value = "emp", key = "#lastName")
+                    @Cacheable(/*value = "emp", */key = "#lastName")
             },
             put = {
-                    @CachePut(value = "emp", key = "#result.id"),
-                    @CachePut(value = "emp", key = "#result.email")
+                    @CachePut(/*value = "emp", */key = "#result.id"),
+                    @CachePut(key = "#result.email")
             }
     )
     public Employee getEmpByLastName(String lastName) {
